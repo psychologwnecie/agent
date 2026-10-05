@@ -1,6 +1,6 @@
 # PWN Recovery Agent: faza 1 (audyt i architektura)
 
-Status: **faza 1 niedokończona. Czeka na wynik audytu z Twojej instalacji.**
+Status: **faza 1 wstrzymana.** Audyt z 2026-10-05 pokazał, że LatePoint nie jest zainstalowany na tej instalacji (sekcja „Wyniki audytu”).
 Implementacja wtyczki PWN Recovery Agent **nie została rozpoczęta.**
 
 Oznaczenia w dokumencie:
@@ -11,7 +11,40 @@ Oznaczenia w dokumencie:
 
 ---
 
-## 0. Co udało się zweryfikować
+## Wyniki audytu z 2026-10-05 (raport z produkcji)
+
+### ✅ Zweryfikowane
+
+- **Środowisko:** WordPress 7.1.2, PHP 8.2.33, MariaDB 11.8.9, hosting Hostinger, prefiks tabel `wp_`, strefa czasowa Europe/Warsaw.
+  Baza danych działa w UTC.
+- **LatePoint NIE jest zainstalowany ani aktywny na tej instalacji.** Na liście wtyczek (aktywnych i nieaktywnych)
+  nie ma żadnej wtyczki LatePoint, w `wp-content/plugins` nie ma katalogu LatePoint (0 plików, 0 hooków).
+  Zostały po nim **44 tabele `wp_latepoint_*`** z danymi oraz dwa zadania CRON `latepoint_*`.
+- **Dane LatePoint kończą się 2025-06-20.** Pierwszy intent pochodzi z 2025-03-10. Od ponad roku nic nowego nie przybyło.
+- **WooCommerce nie jest zainstalowany.** Płatności w danych LatePoint szły przez `stripe_connect` (292 transakcje `succeeded`).
+- **Tabela intentów nazywa się `wp_latepoint_order_intents`, a nie `booking_intents`.** Ma kolumnę `status`:
+  `converted` 362, `new` 149. Liczba `new` równa się liczbie intentów bez `order_id` (149).
+- **Struktura `cart_items_data`:** `{<klucz>: {variant, subtotal, total, coupon_code, coupon_discount, tax_total,
+  item_data: {customer_id, service_id, agent_id, location_id, start_date, start_time, end_date, end_time, duration, ...}}}`.
+  Pole `item_data` jest obiektem, nie zakodowanym tekstem. Prawie zawsze jest 1 pozycja na intent.
+- **Łańcuch powiązań:** `order_intents.order_id → orders.id → order_items.order_id → bookings.order_item_id`.
+  Wszystkie 435 rezerwacji mają `order_item_id`. Jest też `carts.order_intent_id`.
+- **29 intentów wskazuje na nieistniejące zamówienia** (np. usunięte). ConversionChecker musi to obsłużyć.
+- **Statusy rezerwacji:** `approved` 362, `cancelled` 48, `completed` 25. Statusy płatności zamówień: `fully_paid` 358, `not_paid` 79.
+- **LatePoint ma własne kupony** (`wp_latepoint_coupons`, 5 kuponów procentowych). Kupony WooCommerce odpadają, bo WooCommerce nie ma.
+- **CRON działa:** 0 zaległych zdarzeń, Action Scheduler 3.9.3 (dostarczany przez inną wtyczkę) uruchamia się co minutę.
+  W historii Action Scheduler jest 218 akcji `failed`. Nie dotyczą naszego projektu, ale warto je kiedyś sprawdzić.
+- **Poczta:** brak wtyczki SMTP, `wp_mail` korzysta z domyślnej funkcji PHP serwera. To ryzyko dla dostarczalności maili recovery.
+- **Symulacja porzuceń:** 0 kandydatów, bo okno 90 dni nie obejmuje danych sprzed roku.
+
+### ❓ Blokujące pytanie
+
+Skoro LatePoint nie działa na tej instalacji od czerwca 2025, **gdzie dziś klienci rezerwują wizyty?**
+Dopóki nie wiadomo, gdzie powstają aktualne rezerwacje, nie da się zbudować wykrywania porzuceń.
+
+---
+
+## 0. Co udało się zweryfikować (stan przed audytem)
 
 Ze środowiska, w którym pracuję, **nie mam dostępu** do psychologwnecie.pl, jej bazy danych ani plików.
 Polityka sieci zablokowała też wordpress.org, trac i latepoint.com, więc nie mogłem przejrzeć nawet
