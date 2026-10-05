@@ -356,3 +356,25 @@ Każda faza będzie osobnym commitem lub PR z opisem testów. Nie łączę faz.
 7. ❓ Jak traktować `PAYMENT_PENDING` / `payment_failed`: wstrzymanie, osobny szablon czy tylko ręcznie?
 8. ❓ Adres e-mail do TEST MODE.
 9. Konsultacja prawna z sekcji 11, najpóźniej przed fazą 5.
+
+---
+
+## Wyniki sprawdzenia hPanel (2026-10-05, audyt częściowy)
+
+✅ Potwierdzone w hPanel:
+
+- `/rejestracja/` to osobny wpis instalacji WordPress na psychologwnecie.pl.
+- Plan Business WordPress Hosting (200 GB, 1536 MB RAM, 2 CPU, 60 PHP Workers).
+- SSH dostępne, wyłączone. Staging dostępny dla `/rejestracja/`, jeszcze nieutworzony.
+- Kopie zapasowe: najnowsza 2026-10-05, 23 pozycje od 2026-08-23. Odtwarzalność kopii `/rejestracja/` niesprawdzona.
+- Formularz zadań cron dostępny, nie zaobserwowano zapisanych zadań.
+- DNS w Hostingerze. MX: Titan Email. SPF: `include:_spf.mlsend.com` (dwukrotnie) i `include:spf.titan.email`, `~all`.
+  DKIM: `titan3._domainkey` oraz `litesrv._domainkey` (MailerLite). **Brak rekordu DMARC.**
+
+Wniosek dla wysyłki (do potwierdzenia): SPF nie obejmuje serwera WWW Hostingera. Maile wysyłane przez domyślne `wp_mail()`
+z nadawcą `@psychologwnecie.pl` mogą więc nie przechodzić SPF i DKIM. Rekomendacja: wysyłka przez SMTP skrzynki Titan
+(wtyczka SMTP) albo przez dostawcę transakcyjnego, a przed fazą 5 dodanie rekordu DMARC. Zmiany DNS tylko za zgodą właściciela.
+
+❓ Nadal brak (blokuje fazę 2): `DB_NAME` i prefiks tabel `/rejestracja/`, lista wtyczek i wersja LatePoint,
+wyniki zapytań do bazy (statusy i liczby `order_intents`, statusy rezerwacji), kroki formularza i powiadomienia LatePoint,
+informacja, czy rezerwacje powstają poza formularzem.
