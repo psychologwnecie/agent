@@ -37,7 +37,14 @@ Oznaczenia w dokumencie:
 - **Poczta:** brak wtyczki SMTP, `wp_mail` korzysta z domyślnej funkcji PHP serwera. To ryzyko dla dostarczalności maili recovery.
 - **Symulacja porzuceń:** 0 kandydatów, bo okno 90 dni nie obejmuje danych sprzed roku.
 
-### ❓ Blokujące pytanie
+### ✅ Rozwiązanie zagadki (zrzut ekranu z 2026-10-05)
+
+Aktywny LatePoint działa w **osobnej instalacji WordPress w podkatalogu `/rejestracja/`**,
+z panelem pod zmienionym adresem `psychologwnecie.pl/rejestracja/kokpit/` zamiast `wp-admin`.
+Pierwszy audyt objął główną instalację (`/`), a tam zostały tylko stare tabele LatePoint.
+Następny krok: uruchomić ten sam audytor w instalacji `/rejestracja/`.
+
+### ❓ Blokujące pytanie (nieaktualne)
 
 Skoro LatePoint nie działa na tej instalacji od czerwca 2025, **gdzie dziś klienci rezerwują wizyty?**
 Dopóki nie wiadomo, gdzie powstają aktualne rezerwacje, nie da się zbudować wykrywania porzuceń.
